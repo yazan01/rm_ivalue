@@ -19,13 +19,7 @@
   "column_break_9",
   "allocation_percentage",
   "allocation_details_section",
-  "allocation_reference",
-  "column_break_13",
-  "status",
-  "costing_section",
-  "hourly_cost_rate",
-  "column_break_17",
-  "estimated_total_cost"
+  "allocation_reference"
  ],
  "fields": [
   {
@@ -107,44 +101,10 @@
    "label": "Allocation Reference",
    "options": "Resource Allocation",
    "read_only": 1
-  },
-  {
-   "fieldname": "column_break_13",
-   "fieldtype": "Column Break"
-  },
-  {
-   "default": "Active",
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Status",
-   "options": "Active\nCompleted\nCancelled",
-   "reqd": 1
-  },
-  {
-   "fieldname": "costing_section",
-   "fieldtype": "Section Break",
-   "label": "Costing Details"
-  },
-  {
-   "fieldname": "hourly_cost_rate",
-   "fieldtype": "Currency",
-   "label": "Hourly Cost Rate",
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_17",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "estimated_total_cost",
-   "fieldtype": "Currency",
-   "label": "Estimated Total Cost",
-   "read_only": 1
   }
  ],
  "links": [],
- "modified": "2023-04-22 12:00:00.000000",
+ "modified": "2025-07-15 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Rm Ivalue",
  "name": "Project Assignment",
