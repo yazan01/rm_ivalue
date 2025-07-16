@@ -1,11 +1,11 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2023-04-22 12:00:00.000000",
+ "autoname": "PA.#####",
+ "creation": "2025-07-15 12:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
- "istable": 1,
  "field_order": [
   "assignment_details_section",
   "project",
@@ -103,11 +103,13 @@
    "read_only": 1
   }
  ],
+ "is_submittable": 1,
  "links": [],
  "modified": "2025-07-15 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Rm Ivalue",
  "name": "Project Assignment",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
@@ -121,33 +123,10 @@
    "role": "System Manager",
    "share": 1,
    "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 0,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "HR Manager",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 0,
-   "delete": 0,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Projects Manager",
-   "share": 1,
-   "write": 0
   }
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "track_changes": 1
 }
