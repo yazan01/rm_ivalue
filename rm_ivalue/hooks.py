@@ -278,7 +278,7 @@ def update_all_project_assignment_status():
             frappe.db.set_value("Project Assignment", assignment.name, "status", new_status)
             frappe.db.commit()
     
-    frappe.msgprint(f"Updated status for {len(assignments)} Project Assignments")
+  
 
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
