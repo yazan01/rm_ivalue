@@ -97,9 +97,8 @@
   },
   {
    "fieldname": "allocation_reference",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "label": "Allocation Reference",
-   "options": "Resource Allocation",
    "read_only": 1
   }
  ],
