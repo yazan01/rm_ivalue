@@ -8,7 +8,7 @@ from frappe.utils import date_diff, flt, getdate, today, add_days
 class ProjectAssignment(Document):
     def validate(self):
         self.validate_dates()
-        self.update_project_costs()
+        #self.update_project_costs()
         
     def validate_dates(self):
         # Check if end date is after start date
@@ -24,7 +24,7 @@ class ProjectAssignment(Document):
     
     def on_update_after_submit(self):
         # Update any changes to the project costs
-        self.update_project_costs()
+        #self.update_project_costs()
     
     def on_submit(self):
         # Add this assignment's cost to the project
