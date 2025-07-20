@@ -14,6 +14,27 @@ class ProjectAssignment(Document):
         if self.end_date and self.start_date and self.end_date < self.start_date:
             frappe.throw("End Date cannot be before Start Date")
     
+    def on_submit(self):
+        """Update status after submit based on dates"""
+        self.update_status()
+    
+    def update_status(self):
+        """Update status based on current date and assignment dates"""
+        today_date = getdate(today())
+        start_date = getdate(self.start_date)
+        end_date = getdate(self.end_date)
+        
+        if today_date < start_date:
+            status = "Planned"
+        elif start_date <= today_date <= end_date:
+            status = "Active"
+        else:  # today_date > end_date
+            status = "Completed"
+        
+        # Update status in database
+        frappe.db.set_value(self.doctype, self.name, "status", status)
+        self.status = status
+    
     def is_active(self):
         """Check if this assignment is currently active"""
         today_date = getdate(today())
