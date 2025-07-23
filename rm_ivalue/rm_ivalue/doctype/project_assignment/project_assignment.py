@@ -39,7 +39,7 @@ class ProjectAssignment(Document):
             self.status = "Planned"
         elif start_date <= today_date <= end_date:
             self.status = "Active"
-        else:  # today_date > end_date
+        else: today_date > end_date
             self.status = "Completed"
     
     
