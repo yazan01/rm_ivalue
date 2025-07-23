@@ -28,7 +28,6 @@ class ProjectAssignment(Document):
     def on_submit(self):
         """Update status after submit based on dates"""
         self.update_status_based_on_dates()
-        self.generate_allocation_reference()
     
     def update_status_based_on_dates(self):
         """Update status based on current date and assignment dates"""
@@ -43,11 +42,6 @@ class ProjectAssignment(Document):
         else:  # today_date > end_date
             self.status = "Completed"
     
-    def generate_allocation_reference(self):
-        """Generate a unique allocation reference"""
-        if not self.allocation_reference:
-            self.allocation_reference = f"ALLOC-{self.name}-{frappe.utils.now_datetime().strftime('%Y%m%d')}"
-            frappe.db.set_value(self.doctype, self.name, "allocation_reference", self.allocation_reference)
     
     def is_active(self):
         """Check if this assignment is currently active"""
