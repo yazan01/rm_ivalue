@@ -15,6 +15,19 @@ frappe.ui.form.on('Project Assignment', {
                     }
                 });
             }, __('Actions'));
+
+            // Add Change Request buttons
+            frm.add_custom_button(__('Change End Date'), function() {
+                show_end_date_change_dialog(frm);
+            }, __('Change Request'));
+
+            frm.add_custom_button(__('Change Allocation %'), function() {
+                show_allocation_change_dialog(frm);
+            }, __('Change Request'));
+
+            frm.add_custom_button(__('View Change History'), function() {
+                show_change_history(frm);
+            }, __('Change Request'));
         }
         
         // Show assignment summary
@@ -133,4 +146,181 @@ function show_assignment_summary() {
             }
         }
     });
+}
+
+function show_end_date_change_dialog(frm) {
+    let dialog = new frappe.ui.Dialog({
+        title: __('Change End Date'),
+        fields: [
+            {
+                fieldtype: 'Date',
+                fieldname: 'new_end_date',
+                label: __('New End Date'),
+                reqd: 1,
+                default: frm.doc.end_date
+            },
+            {
+                fieldtype: 'Small Text',
+                fieldname: 'reason',
+                label: __('Reason for Change'),
+                reqd: 1
+            }
+        ],
+        primary_action: function(values) {
+            frappe.call({
+                method: 'rm_ivalue.rm_ivalue.api.create_end_date_change_request',
+                args: {
+                    assignment_name: frm.doc.name,
+                    new_end_date: values.new_end_date,
+                    reason: values.reason
+                },
+                callback: function(r) {
+                    if (r.message && r.message.success) {
+                        frappe.msgprint(__('End date change request processed successfully'));
+                        frm.reload_doc();
+                        dialog.hide();
+                    }
+                }
+            });
+        },
+        primary_action_label: __('Submit Change Request')
+    });
+    
+    dialog.show();
+}
+
+function show_allocation_change_dialog(frm) {
+    let dialog = new frappe.ui.Dialog({
+        title: __('Change Allocation Percentage'),
+        fields: [
+            {
+                fieldtype: 'Percent',
+                fieldname: 'new_allocation_percentage',
+                label: __('New Allocation Percentage'),
+                reqd: 1,
+                default: frm.doc.allocation_percentage
+            },
+            {
+                fieldtype: 'Date',
+                fieldname: 'effective_date',
+                label: __('Effective Date'),
+                reqd: 1,
+                default: frappe.datetime.add_days(frappe.datetime.get_today(), 1)
+            },
+            {
+                fieldtype: 'Small Text',
+                fieldname: 'reason',
+                label: __('Reason for Change'),
+                reqd: 1
+            },
+            {
+                fieldtype: 'HTML',
+                fieldname: 'info',
+                options: `<div class="alert alert-info">
+                    <strong>Note:</strong> This will:
+                    <ul>
+                        <li>Update current assignment end date to: <span id="new-end-date">${frappe.datetime.add_days(frappe.datetime.get_today(), -1)}</span></li>
+                        <li>Create new assignment starting from effective date</li>
+                        <li>New assignment will have the same project and employee</li>
+                    </ul>
+                </div>`
+            }
+        ],
+        primary_action: function(values) {
+            frappe.call({
+                method: 'rm_ivalue.rm_ivalue.api.create_allocation_change_request',
+                args: {
+                    assignment_name: frm.doc.name,
+                    new_allocation_percentage: values.new_allocation_percentage,
+                    effective_date: values.effective_date,
+                    reason: values.reason
+                },
+                callback: function(r) {
+                    if (r.message && r.message.success) {
+                        frappe.msgprint({
+                            title: __('Success'),
+                            message: __('Allocation change request processed successfully. New assignment: ') + r.message.new_assignment,
+                            indicator: 'green'
+                        });
+                        frm.reload_doc();
+                        dialog.hide();
+                    }
+                }
+            });
+        },
+        primary_action_label: __('Submit Change Request')
+    });
+    
+    // Update info section when effective date changes
+    dialog.fields_dict.effective_date.$input.on('change', function() {
+        let effective_date = dialog.get_value('effective_date');
+        if (effective_date) {
+            let new_end_date = frappe.datetime.add_days(effective_date, -1);
+            dialog.fields_dict.info.$wrapper.find('#new-end-date').text(new_end_date);
+        }
+    });
+    
+    dialog.show();
+}
+
+function show_change_history(frm) {
+    frappe.call({
+        method: 'rm_ivalue.rm_ivalue.api.get_assignment_change_history',
+        args: {
+            assignment_name: frm.doc.name
+        },
+        callback: function(r) {
+            if (r.message) {
+                let history_html = '<div class="change-history">';
+                
+                // Show related assignments
+                if (r.message.related_assignments && r.message.related_assignments.length > 0) {
+                    history_html += '<h5>Related Assignments</h5>';
+                    history_html += '<table class="table table-bordered table-sm"><thead><tr><th>Assignment</th><th>Start Date</th><th>End Date</th><th>Allocation %</th><th>Status</th><th>Reference</th></tr></thead><tbody>';
+                    
+                    r.message.related_assignments.forEach(function(assignment) {
+                        let row_class = assignment.name === frm.doc.name ? 'table-primary' : '';
+                        history_html += `<tr class="${row_class}">
+                            <td><a href="/app/project-assignment/${assignment.name}">${assignment.name}</a></td>
+                            <td>${assignment.start_date}</td>
+                            <td>${assignment.end_date}</td>
+                            <td>${assignment.allocation_percentage}%</td>
+                            <td><span class="indicator ${get_status_color(assignment.status)}">${assignment.status}</span></td>
+                            <td>${assignment.allocation_reference || ''}</td>
+                        </tr>`;
+                    });
+                    
+                    history_html += '</tbody></table>';
+                }
+                
+                // Show comments/changes
+                if (r.message.comments && r.message.comments.length > 0) {
+                    history_html += '<h5 class="mt-3">Change Log</h5>';
+                    r.message.comments.forEach(function(comment) {
+                        history_html += `<div class="alert alert-secondary">
+                            <small class="text-muted">${frappe.datetime.str_to_user(comment.creation)} by ${comment.owner}</small><br>
+                            ${comment.content}
+                        </div>`;
+                    });
+                }
+                
+                history_html += '</div>';
+                
+                frappe.msgprint({
+                    title: __('Change History for ') + frm.doc.name,
+                    message: history_html,
+                    wide: true
+                });
+            }
+        }
+    });
+}
+
+function get_status_color(status) {
+    switch(status) {
+        case 'Planned': return 'blue';
+        case 'Active': return 'green';
+        case 'Completed': return 'gray';
+        default: return 'gray';
+    }
 }
