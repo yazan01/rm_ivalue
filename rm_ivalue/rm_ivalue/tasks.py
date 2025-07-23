@@ -27,7 +27,7 @@ def update_project_assignment_status():
                 new_status = "Planned"
             elif start_date <= today_date <= end_date:
                 new_status = "Active"
-            else:  # today_date > end_date
+            else: today_date > end_date
                 new_status = "Completed"
             
             # Update only if status has changed
