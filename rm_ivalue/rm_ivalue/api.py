@@ -73,3 +73,77 @@ def get_employee_active_assignments(employee=None):
         return assignments
     except Exception as e:
         frappe.throw(f"Error getting active assignments: {str(e)}")
+
+@frappe.whitelist()
+def create_end_date_change_request(assignment_name, new_end_date, reason=""):
+    """Create change request for end date modification"""
+    if not frappe.has_permission("Project Assignment", "write"):
+        frappe.throw("Not enough permissions to modify Project Assignment")
+    
+    try:
+        assignment = frappe.get_doc("Project Assignment", assignment_name)
+        result = assignment.create_change_request_for_end_date(new_end_date, reason)
+        
+        return {
+            "success": True,
+            "message": f"End date change request processed successfully",
+            "assignment_name": assignment_name
+        }
+    except Exception as e:
+        frappe.throw(f"Error processing end date change request: {str(e)}")
+
+@frappe.whitelist()
+def create_allocation_change_request(assignment_name, new_allocation_percentage, effective_date, reason=""):
+    """Create change request for allocation percentage modification"""
+    if not frappe.has_permission("Project Assignment", "write"):
+        frappe.throw("Not enough permissions to modify Project Assignment")
+    
+    try:
+        assignment = frappe.get_doc("Project Assignment", assignment_name)
+        new_assignment_name = assignment.create_change_request_for_allocation(
+            float(new_allocation_percentage), effective_date, reason
+        )
+        
+        return {
+            "success": True,
+            "message": f"Allocation change request processed successfully",
+            "original_assignment": assignment_name,
+            "new_assignment": new_assignment_name
+        }
+    except Exception as e:
+        frappe.throw(f"Error processing allocation change request: {str(e)}")
+
+@frappe.whitelist()
+def get_assignment_change_history(assignment_name):
+    """Get change history for an assignment"""
+    if not frappe.has_permission("Project Assignment", "read"):
+        frappe.throw("Not enough permissions to read Project Assignment")
+    
+    try:
+        # Get comments for this assignment
+        comments = frappe.get_all(
+            "Comment",
+            filters={
+                "reference_doctype": "Project Assignment",
+                "reference_name": assignment_name,
+                "comment_type": "Info"
+            },
+            fields=["content", "creation", "owner"],
+            order_by="creation desc"
+        )
+        
+        # Get related assignments (created from this assignment or vice versa)
+        related_assignments = frappe.db.sql("""
+            SELECT name, allocation_reference, start_date, end_date, allocation_percentage, status
+            FROM `tabProject Assignment`
+            WHERE (allocation_reference LIKE %s OR name = %s)
+            AND docstatus != 2
+            ORDER BY start_date
+        """, (f"%{assignment_name}%", assignment_name), as_dict=True)
+        
+        return {
+            "comments": comments,
+            "related_assignments": related_assignments
+        }
+    except Exception as e:
+        frappe.throw(f"Error getting assignment change history: {str(e)}")
