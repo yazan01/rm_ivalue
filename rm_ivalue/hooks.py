@@ -148,23 +148,23 @@ app_license = "mit"
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"rm_ivalue.tasks.all"
-# 	],
-# 	"daily": [
-# 		"rm_ivalue.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"rm_ivalue.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"rm_ivalue.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"rm_ivalue.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"all": [
+		"rm_ivalue.rm_ivalue.tasks.all"
+	],
+	"daily": [
+		"rm_ivalue.rm_ivalue.tasks.daily"
+	],
+	"hourly": [
+		"rm_ivalue.rm_ivalue.tasks.hourly"
+	],
+	"weekly": [
+		"rm_ivalue.rm_ivalue.tasks.weekly"
+	],
+	"monthly": [
+		"rm_ivalue.rm_ivalue.tasks.monthly"
+	],
+}
 
 # Testing
 # -------
@@ -237,8 +237,3 @@ app_license = "mit"
 
 # Automatically update python controller files with type annotations for this app.
 # export_python_type_annotations = True
-
-
-
-
-
