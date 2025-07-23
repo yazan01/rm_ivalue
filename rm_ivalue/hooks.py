@@ -240,47 +240,5 @@ app_license = "mit"
 
 
 
-"""
-scheduler_events = {
-    "daily": [
-        "rm_ivalue.doctype.project_assignment.project_assignment.update_all_project_assignment_status"
-    ]
-}
-"""
 
-# Add this function to your project_assignment.py file:
-
-@frappe.whitelist()
-def update_all_project_assignment_status():
-    """Update status for all submitted Project Assignments"""
-    
-    # Get all submitted project assignments
-    assignments = frappe.get_all("Project Assignment", 
-                                filters={"docstatus": 1},
-                                fields=["name", "start_date", "end_date", "status"])
-    
-    today_date = getdate(today())
-    
-    for assignment in assignments:
-        start_date = getdate(assignment.start_date)
-        end_date = getdate(assignment.end_date)
-        
-        # Determine new status
-        if today_date < start_date:
-            new_status = "Planned"
-        elif start_date <= today_date <= end_date:
-            new_status = "Active"
-        else:
-            new_status = "Completed"
-        
-        # Update only if status has changed
-        if assignment.status != new_status:
-            frappe.db.set_value("Project Assignment", assignment.name, "status", new_status)
-            frappe.db.commit()
-    
-  
-
-# default_log_clearing_doctypes = {
-# 	"Logging DocType Name": 30  # days to retain logs
-# }
 
