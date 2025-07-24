@@ -1,7 +1,7 @@
 {
  "add_total_row": 0,
  "columns": [],
- "creation": "2025-07-23 10:00:00.000000",
+ "creation": "2025-07-24 23:00:00.000000",
  "disable_prepared_report": 0,
  "disabled": 0,
  "docstatus": 0,
@@ -9,7 +9,7 @@
  "is_standard": "Yes",
  "json": "{}",
  "letter_head": "",
- "modified": "2025-07-23 10:00:00.000000",
+ "modified": "2025-07-24 23:00:00.000000",
  "modified_by": "Administrator",
  "module": "Rm Ivalue",
  "name": "Employee Assignment Dashboard",
@@ -22,12 +22,6 @@
  "roles": [
   {
    "role": "System Manager"
-  },
-  {
-   "role": "HR Manager"
-  },
-  {
-   "role": "Projects Manager"
   }
  ]
 }
