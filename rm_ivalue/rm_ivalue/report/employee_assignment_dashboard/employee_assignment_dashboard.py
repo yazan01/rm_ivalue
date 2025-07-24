@@ -354,3 +354,77 @@ def get_department_summary():
     """
     
     return frappe.db.sql(query, as_dict=True)
+
+# Add this to your employee_assignment_dashboard.py file
+
+def execute(filters=None):
+    # Check if HTML dashboard view is requested
+    if frappe.form_dict.get('html_format') or (filters and filters.get('view_type') == 'dashboard'):
+        return get_html_dashboard()
+    
+    # Otherwise return normal report data
+    columns = get_columns()
+    data = get_data(filters)
+    chart = get_chart_data(data)
+    summary = get_report_summary(data)
+    
+    return columns, data, None, chart, summary
+
+def get_html_dashboard():
+    """Return HTML dashboard content"""
+    # Read the HTML file content
+    import os
+    html_file_path = os.path.join(
+        frappe.get_app_path('rm_ivalue'),
+        'rm_ivalue', 'report', 'employee_assignment_dashboard',
+        'employee_assignment_dashboard.html'
+    )
+    
+    try:
+        with open(html_file_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        
+        # Return in format expected by ERPNext
+        return {
+            'html': html_content,
+            'columns': [],
+            'data': [],
+            'chart': None,
+            'summary': None
+        }
+    except Exception as e:
+        frappe.log_error(f"Error reading HTML dashboard: {str(e)}")
+        return get_columns(), get_data(None), None, get_chart_data([]), get_report_summary([])
+
+# Alternative approach - embed HTML directly
+def get_html_dashboard_embedded():
+    """Return embedded HTML dashboard"""
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Employee Assignment Dashboard</title>
+        <!-- Include your CSS and JS here -->
+    </head>
+    <body>
+        <!-- Your dashboard HTML content -->
+        <!-- You can embed the full HTML from your .html file here -->
+    </body>
+    </html>
+    """
+    
+    return {
+        'html': html_content,
+        'columns': [],
+        'data': [],
+        'chart': None,
+        'summary': None
+    }
+
+# Add a custom button to switch to dashboard view
+@frappe.whitelist()
+def get_dashboard_html():
+    """API endpoint to get dashboard HTML"""
+    return get_html_dashboard()
