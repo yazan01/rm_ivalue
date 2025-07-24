@@ -468,4 +468,303 @@
         let employeeData = [];
         let allocationChart, departmentChart;
 
-        
+        // Initialize dashboard on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Search functionality
+            document.getElementById('search-input').addEventListener('input', filterTable);
+            document.getElementById('department-filter').addEventListener('change', filterTable);
+            document.getElementById('status-filter').addEventListener('change', filterTable);
+        }
+
+        function loadDashboardData() {
+            showLoading(true);
+            
+            // Simulate API call to get dashboard data
+            // In a real ERPNext environment, you would call:
+            // frappe.call({
+            //     method: 'rm_ivalue.rm_ivalue.report.employee_assignment_dashboard.employee_assignment_dashboard.execute',
+            //     callback: function(r) {
+            //         if (r.message) {
+            //             processData(r.message[1]); // data is in index 1
+            //             updateStatistics(r.message[1]);
+            //             createCharts(r.message[1]);
+            //         }
+            //     }
+            // });
+
+            // For demo purposes, we'll use mock data
+            setTimeout(() => {
+                const mockData = generateMockData();
+                processData(mockData);
+                updateStatistics(mockData);
+                createCharts(mockData);
+                showLoading(false);
+            }, 1000);
+        }
+
+        function generateMockData() {
+            const departments = ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance'];
+            const designations = ['Software Engineer', 'Senior Engineer', 'Manager', 'Analyst', 'Executive'];
+            const allocationStatuses = ['Available', 'Allocated', 'Over-allocated'];
+            
+            const mockData = [];
+            for (let i = 1; i <= 50; i++) {
+                const allocation = Math.random() * 120;
+                let status;
+                if (allocation === 0) status = 'Available';
+                else if (allocation <= 100) status = 'Allocated';
+                else status = 'Over-allocated';
+
+                mockData.push({
+                    employee: `EMP${String(i).padStart(3, '0')}`,
+                    employee_name: `Employee ${i}`,
+                    department: departments[Math.floor(Math.random() * departments.length)],
+                    designation: designations[Math.floor(Math.random() * designations.length)],
+                    status: 'Active',
+                    total_assignments: Math.floor(Math.random() * 5) + 1,
+                    active_assignments: Math.floor(Math.random() * 3),
+                    current_allocation: Math.round(allocation),
+                    allocation_status: status,
+                    upcoming_assignments: Math.floor(Math.random() * 2),
+                    completed_assignments: Math.floor(Math.random() * 10),
+                    availability_date: new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                });
+            }
+            return mockData;
+        }
+
+        function processData(data) {
+            employeeData = data;
+            populateTable(data);
+            populateFilters(data);
+        }
+
+        function populateTable(data) {
+            const tbody = document.getElementById('employee-table-body');
+            tbody.innerHTML = '';
+
+            data.forEach(employee => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${employee.employee}</td>
+                    <td>${employee.employee_name}</td>
+                    <td>${employee.department || 'N/A'}</td>
+                    <td>${employee.designation || 'N/A'}</td>
+                    <td><span class="status-badge status-${employee.allocation_status.toLowerCase().replace('-', '-')}">${employee.allocation_status}</span></td>
+                    <td>${employee.active_assignments}</td>
+                    <td>
+                        <div>${employee.current_allocation}%</div>
+                        <div class="allocation-bar">
+                            <div class="allocation-fill ${getAllocationClass(employee.current_allocation)}" 
+                                 style="width: ${Math.min(employee.current_allocation, 100)}%"></div>
+                        </div>
+                    </td>
+                    <td>${employee.availability_date || 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getAllocationClass(allocation) {
+            if (allocation > 100) return 'allocation-over';
+            if (allocation > 80) return 'allocation-high';
+            return 'allocation-normal';
+        }
+
+        function populateFilters(data) {
+            const departments = [...new Set(data.map(emp => emp.department).filter(Boolean))];
+            const departmentFilter = document.getElementById('department-filter');
+            
+            // Clear existing options except "All Departments"
+            while (departmentFilter.children.length > 1) {
+                departmentFilter.removeChild(departmentFilter.lastChild);
+            }
+            
+            departments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept;
+                option.textContent = dept;
+                departmentFilter.appendChild(option);
+            });
+        }
+
+        function updateStatistics(data) {
+            const totalEmployees = data.length;
+            const availableEmployees = data.filter(emp => emp.allocation_status === 'Available').length;
+            const allocatedEmployees = data.filter(emp => emp.allocation_status === 'Allocated').length;
+            const overAllocatedEmployees = data.filter(emp => emp.allocation_status === 'Over-allocated').length;
+            const activeAssignments = data.reduce((sum, emp) => sum + (emp.active_assignments || 0), 0);
+            const avgAllocation = totalEmployees > 0 ? 
+                Math.round(data.reduce((sum, emp) => sum + (emp.current_allocation || 0), 0) / totalEmployees) : 0;
+
+            document.getElementById('total-employees').textContent = totalEmployees;
+            document.getElementById('available-employees').textContent = availableEmployees;
+            document.getElementById('allocated-employees').textContent = allocatedEmployees;
+            document.getElementById('over-allocated-employees').textContent = overAllocatedEmployees;
+            document.getElementById('active-assignments').textContent = activeAssignments;
+            document.getElementById('avg-allocation').textContent = avgAllocation + '%';
+        }
+
+        function createCharts(data) {
+            createAllocationChart(data);
+            createDepartmentChart(data);
+        }
+
+        function createAllocationChart(data) {
+            const statusCounts = {
+                'Available': data.filter(emp => emp.allocation_status === 'Available').length,
+                'Allocated': data.filter(emp => emp.allocation_status === 'Allocated').length,
+                'Over-allocated': data.filter(emp => emp.allocation_status === 'Over-allocated').length
+            };
+
+            const ctx = document.getElementById('allocationChart').getContext('2d');
+            
+            if (allocationChart) {
+                allocationChart.destroy();
+            }
+
+            allocationChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        data: Object.values(statusCounts),
+                        backgroundColor: ['#2ecc71', '#f39c12', '#e74c3c'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createDepartmentChart(data) {
+            const departmentData = {};
+            
+            data.forEach(emp => {
+                const dept = emp.department || 'N/A';
+                if (!departmentData[dept]) {
+                    departmentData[dept] = { total: 0, allocated: 0 };
+                }
+                departmentData[dept].total++;
+                if (emp.allocation_status !== 'Available') {
+                    departmentData[dept].allocated++;
+                }
+            });
+
+            const ctx = document.getElementById('departmentChart').getContext('2d');
+            
+            if (departmentChart) {
+                departmentChart.destroy();
+            }
+
+            departmentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(departmentData),
+                    datasets: [
+                        {
+                            label: 'Total Employees',
+                            data: Object.values(departmentData).map(d => d.total),
+                            backgroundColor: '#3498db',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Allocated Employees',
+                            data: Object.values(departmentData).map(d => d.allocated),
+                            backgroundColor: '#f39c12',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const departmentFilter = document.getElementById('department-filter').value;
+            const statusFilter = document.getElementById('status-filter').value;
+
+            const filteredData = employeeData.filter(employee => {
+                const matchesSearch = employee.employee_name.toLowerCase().includes(searchTerm) ||
+                                    employee.employee.toLowerCase().includes(searchTerm);
+                const matchesDepartment = !departmentFilter || employee.department === departmentFilter;
+                const matchesStatus = !statusFilter || employee.allocation_status === statusFilter;
+
+                return matchesSearch && matchesDepartment && matchesStatus;
+            });
+
+            populateTable(filteredData);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('employee-table').style.display = show ? 'none' : 'table';
+        }
+
+        function exportData() {
+            // Convert data to CSV
+            const headers = ['Employee ID', 'Name', 'Department', 'Designation', 'Status', 'Active Assignments', 'Current Allocation %', 'Availability Date'];
+            const csvContent = [
+                headers.join(','),
+                ...employeeData.map(emp => [
+                    emp.employee,
+                    emp.employee_name,
+                    emp.department || '',
+                    emp.designation || '',
+                    emp.allocation_status,
+                    emp.active_assignments,
+                    emp.current_allocation,
+                    emp.availability_date || ''
+                ].join(','))
+            ].join('\n');
+
+            // Download CSV
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'employee_assignment_dashboard.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
