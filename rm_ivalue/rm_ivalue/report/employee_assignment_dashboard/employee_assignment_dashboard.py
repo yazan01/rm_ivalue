@@ -292,12 +292,6 @@ def get_report_summary(data):
             "datatype": "Int"
         },
         {
-            "value": over_allocated_employees,
-            "label": "Over-allocated Employees",
-            "indicator": "Red",
-            "datatype": "Int"
-        },
-        {
             "value": total_active_assignments,
             "label": "Total Active Assignments",
             "indicator": "Blue",
